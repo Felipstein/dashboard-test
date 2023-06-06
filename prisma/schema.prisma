@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Dashboard {
+  id     String   @id @default(cuid())
+  name   String
+  Widget Widget[]
+
+  @@map("dashboards")
+}
+
+model Widget {
+  id          String    @id @default(cuid())
+  key         String
+  layout      Json
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id])
+
+  @@map("widgets")
+}
