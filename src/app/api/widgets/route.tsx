@@ -16,3 +16,19 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(widget)
 }
+
+export async function PUT(req: NextRequest) {
+  const widgets = (await req.json()) as Widget[]
+
+  const promises = widgets.map((widget) =>
+    prisma.widget.update({
+      where: { id: widget.id },
+      // @ts-ignore
+      data: { layout: widget.layout },
+    }),
+  )
+
+  const widgetsUpdated = await Promise.all(promises)
+
+  return NextResponse.json(widgetsUpdated)
+}

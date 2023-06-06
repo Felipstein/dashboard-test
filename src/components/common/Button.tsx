@@ -31,6 +31,7 @@ export function Button({
           'px-4 py-2 text-sm': size === 'md',
           'px-3 py-2 text-sm leading-4': size === 'sm',
           'px-2.5 py-1.5 text-xs': size === 'xs',
+          'pointer-events-none opacity-40': props.disabled,
         },
         className,
       )}

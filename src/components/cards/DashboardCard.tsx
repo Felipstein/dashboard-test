@@ -6,9 +6,10 @@ import Link from 'next/link'
 
 export interface DashboardCardProps {
   data: Dashboard
+  totalWidgets: number
 }
 
-export function DashboardCard({ data }: DashboardCardProps) {
+export function DashboardCard({ data, totalWidgets }: DashboardCardProps) {
   return (
     <Link
       href={`/dashboards/${data.id}`}
@@ -19,6 +20,14 @@ export function DashboardCard({ data }: DashboardCardProps) {
 
         <span className="text-sm opacity-40">{data.id}</span>
       </header>
+
+      <div className="text-sm opacity-40">
+        {totalWidgets > 0 ? (
+          <span>Widgets: {totalWidgets}</span>
+        ) : (
+          <span>Sem widgets</span>
+        )}
+      </div>
 
       <div>
         <button

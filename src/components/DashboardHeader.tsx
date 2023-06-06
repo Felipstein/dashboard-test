@@ -6,13 +6,28 @@ import {
   PlusIcon,
 } from '@heroicons/react/solid'
 import Link from 'next/link'
+import { Button } from './common/Button'
+
+import arrowPath from '@/assets/white-arrow-path.svg'
+import Image from 'next/image'
 
 export interface DashboardHeaderProps {
   name: string
+  hasChange: boolean
+  isSaving: boolean
   onAddWidget: () => void
+  onCancel: () => void
+  onSave: () => void
 }
 
-export function DashboardHeader({ name, onAddWidget }: DashboardHeaderProps) {
+export function DashboardHeader({
+  name,
+  hasChange,
+  isSaving,
+  onAddWidget,
+  onCancel,
+  onSave,
+}: DashboardHeaderProps) {
   return (
     <div className="rounded-md border border-zinc-100 bg-white p-4 shadow">
       <div>
@@ -79,6 +94,31 @@ export function DashboardHeader({ name, onAddWidget }: DashboardHeaderProps) {
           </h2>
         </div>
         <div className="mt-4 flex flex-shrink-0 md:ml-4 md:mt-0">
+          <div className="mr-4 flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={onCancel}
+              disabled={!hasChange}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={onSave}
+              disabled={!hasChange || isSaving}
+            >
+              {isSaving && (
+                <Image
+                  src={arrowPath}
+                  alt="Icon"
+                  className="h-4 w-4 animate-spin"
+                />
+              )}
+              Salvar
+            </Button>
+          </div>
+
           <button
             type="button"
             className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"

@@ -1,9 +1,9 @@
-import { Dashboard } from '@prisma/client'
+import { Dashboard, Widget } from '@prisma/client'
 import { DashboardCard } from './cards/DashboardCard'
 import { CreateDashboard } from './CreateDashboard'
 
 export interface DashboardListProps {
-  dashboards: Dashboard[]
+  dashboards: (Dashboard & { Widget: Widget[] })[]
 }
 
 export function DashboardList({ dashboards }: DashboardListProps) {
@@ -17,7 +17,11 @@ export function DashboardList({ dashboards }: DashboardListProps) {
 
       <ul className="space-y-3">
         {dashboards.map((dashboard) => (
-          <DashboardCard key={dashboard.id} data={dashboard} />
+          <DashboardCard
+            key={dashboard.id}
+            data={dashboard}
+            totalWidgets={dashboard.Widget.length}
+          />
         ))}
       </ul>
     </div>

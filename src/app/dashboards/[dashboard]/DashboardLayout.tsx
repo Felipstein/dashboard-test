@@ -5,8 +5,8 @@ import { api } from '@/api'
 import { DashboardHeader } from '@/components/DashboardHeader'
 import { TrashIcon } from '@heroicons/react/outline'
 import { Dashboard } from '@prisma/client'
-import { useState } from 'react'
-import ReactGridLayout from 'react-grid-layout'
+import { useRef, useState } from 'react'
+import ReactGridLayout, { Layout } from 'react-grid-layout'
 
 import arrowPath from '@/assets/white-arrow-path.svg'
 import Image from 'next/image'
@@ -17,16 +17,60 @@ export interface DashboardLayoutProps {
   dashboard: Dashboard & { Widget: Widget[] }
   onAddWidget: (widget: Widget) => void
   onRemoveWidget: (widgetId: string) => void
+  onUpdateWidgets: (widgets: Widget[]) => void
 }
 
 export function DashboardLayout({
   dashboard: { Widget: widgets, ...dashboard },
   onAddWidget,
   onRemoveWidget,
+  onUpdateWidgets,
 }: DashboardLayoutProps) {
-  const layouts = widgets.map((widget) => ({ ...widget.layout }))
+  const [isSaved, setIsSaved] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const originalLayouts = widgets.map((widget) => ({ ...widget.layout }))
+  const [layouts, setLayouts] = useState(originalLayouts)
 
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const isCancelled = useRef(false)
+  const isAdding = useRef(false)
+  const isFirstLayoutsUpdate = useRef(true)
+
+  async function handleSave() {
+    try {
+      setIsSaving(true)
+
+      const widgetsOfLayouts = layouts.map((layout) => {
+        const widgetOfLayout = widgets.find((widget) => widget.key === layout.i)
+
+        if (!widgetOfLayout) {
+          throw new Error('Widget not found')
+        }
+
+        return {
+          ...widgetOfLayout,
+          layout,
+        }
+      })
+
+      const { data } = await api.put('/widgets', widgetsOfLayouts)
+
+      onUpdateWidgets(data)
+    } catch {
+    } finally {
+      setIsSaving(false)
+      setIsSaved(true)
+    }
+  }
+
+  function handleCancel() {
+    setLayouts(originalLayouts)
+    setIsSaved(true)
+
+    isCancelled.current = true
+  }
 
   async function handleAddWidget() {
     const key = Math.random().toString()
@@ -40,10 +84,14 @@ export function DashboardLayout({
         y: 0,
         w: 4,
         h: 4,
-        minH: 2,
+        minH: 3,
         minW: 3,
       },
     } as Omit<Widget, 'id'>)
+
+    isAdding.current = true
+
+    setLayouts((layouts) => [...layouts, data.layout])
 
     onAddWidget(data)
   }
@@ -61,9 +109,36 @@ export function DashboardLayout({
     }
   }
 
+  async function handleUpdateWidgetLayouts(layouts: Layout[]) {
+    if (isCancelled.current) {
+      isCancelled.current = false
+      return
+    }
+
+    if (isFirstLayoutsUpdate.current) {
+      isFirstLayoutsUpdate.current = false
+      return
+    }
+
+    if (isAdding.current) {
+      isAdding.current = false
+      return
+    }
+
+    setLayouts(layouts)
+    setIsSaved(false)
+  }
+
   return (
     <div>
-      <DashboardHeader name={dashboard.name} onAddWidget={handleAddWidget} />
+      <DashboardHeader
+        name={dashboard.name}
+        hasChange={!isSaved}
+        isSaving={isSaving}
+        onCancel={handleCancel}
+        onSave={handleSave}
+        onAddWidget={handleAddWidget}
+      />
 
       <div className="mt-4 rounded-lg p-3">
         {widgets.length === 0 && (
@@ -78,6 +153,8 @@ export function DashboardLayout({
           autoSize
           rowHeight={30}
           width={1200}
+          isBounded
+          onLayoutChange={handleUpdateWidgetLayouts}
         >
           {widgets.map((widget) => (
             <div
